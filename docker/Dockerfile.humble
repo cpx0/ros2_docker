@@ -1,0 +1,165 @@
+ARG BASE_IMAGE=nvcr.io/nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
+FROM ${BASE_IMAGE}
+
+ARG ROS_PKG=ros_base
+ENV ROS_DISTRO=humble
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_PYTHON_VERSION=3
+
+# ENV https_proxy "http://proxy..."
+# ENV http_proxy "http://proxy..."
+
+ARG TF_SERVING_VERSION=0.0.0
+ARG USERNAME=cpx
+
+# TODO: User should be refactored instead of hard coded cpx
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+
+ENV USERNAME $USERNAME
+ENV GROUPNAME ros_users
+ENV UID 1000
+ENV GID 1000
+ENV HOME /home/$USERNAME
+ENV NB_PREFIX /
+ENV PATH ${HOME}/.local/bin:$PATH
+ENV POETRY_DIR ${HOME}/poetry-ros2
+
+# TODO: UID be refactored instead of hard coded 1000 to your host UID
+
+# Use bash instead of sh
+# ENV SHELL /bin/bash
+SHELL ["/bin/bash", "-c"]
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        software-properties-common && \
+    add-apt-repository ppa:kelleyk/emacs -y && \
+    apt-get update && \
+	apt-get install -yq --no-install-recommends \
+		apt-transport-https \
+		build-essential \
+		bzip2 \
+		ca-certificates \
+		curl \
+		g++ \
+		git \
+		gnupg \
+		graphviz \
+		locales \
+		lsb-release \
+		openssh-client \
+		sudo \
+		unzip \
+		vim \
+		wget \
+		zip \
+		emacs \
+		python3.10 \
+		python3-pip \
+		python3-dev \
+		python3-setuptools \
+		libssl-dev zlib1g-dev libbz2-dev \
+		libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
+		xz-utils tk-dev libffi-dev liblzma-dev python3-openssl \
+		libopencv-dev \
+		cmake libopenmpi-dev zlib1g-dev \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Nodejs for jupyterlab-manager
+# RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+RUN curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+        nodejs \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# change the locale from POSIX to UTF-8
+RUN locale-gen en_US en_US.UTF-8 && \
+	update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+ENV PYTHONIOENCODING=utf-8
+
+# Create USERNAME user with UID=1000 and in the 'users' group
+# but allow for non-initial launches of the notebook to have
+# ${HOME} provided by the contents of a PV
+RUN useradd -M -s /bin/bash -N -u $UID $USERNAME && \
+    groupadd -g ${GID} ${GROUPNAME} && \
+    usermod -g ${GROUPNAME} ${USERNAME} && \
+    chown -R ${USERNAME}:${GROUPNAME} /usr/local/bin && \
+    mkdir -p ${HOME}/workspace && \
+    chown -R ${USERNAME}:${GROUPNAME} ${HOME}
+
+# NOTE: Beyond this point be careful of breaking out
+# or otherwise adding new layers with RUN, chown, etc.
+# The image size can grow significantly.
+
+# python to 3.10
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+        python-is-python3 \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install dependencies for glvnd and X11
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+        libglvnd0 libgl1 libglx0 libegl1 \
+        libglew2.2 libgl1-mesa-glx libosmesa6 \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# GUI app, ex. xserver, xorg, etc. They already have installed.
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+        x11-apps \
+    && apt-get clean && \
+    rm -rf /ver/lib/apt/lists/*
+
+# Install base python3 packages
+RUN curl -sSL https://install.python-poetry.org | \
+    POETRY_HOME=/etc/poetry POETRY_VERSION=1.2.0 python3 - && \
+    cd /usr/local/bin && \
+    ln -s /opt/poetry/bin/poetry && \
+    mkdir -p ${POETRY_DIR}
+COPY ./docker/pyproject.toml ${POETRY_DIR}/pyproject.toml
+COPY ./docker/scripts/poetry_install.sh ${POETRY_DIR}/poetry_install.sh
+WORKDIR /opt/app
+RUN cd ${POETRY_DIR} && bash poetry_install.sh
+
+# GitLFS
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+        git-lfs \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Time Zone
+ENV TIMEZONE Asia/Toyko
+RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && \
+    echo $TIMEZONE > /etc/timezone
+
+## Set ENV for dm_control
+ENV MUJOCO_GL osmesa
+ENV PYOPENGL_PLATFORM osmesa
+
+# setup ROS2
+COPY ./docker/scripts/setup_ros2.sh /opt/app/setup_ros2.sh
+RUN bash setup_ros2.sh
+
+# Set ENV for ROS2
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+# setup entrypoint for ROS2
+COPY ./docker/packages/ros_entrypoint.sh /opt/app/ros_entrypoint.sh
+
+# Configure container startup
+RUN chown -R ${USERNAME}:${GROUPNAME} /usr/local/bin && \
+    chown -R ${USERNAME}:${GROUPNAME} ${HOME}
+    chmod -R 777 ${HOME}
+EXPOSE 5005 10000
+USER ${USERNAME}
+ENTRYPOINT ["/opt/app/ros_entrypoint.sh"]
+WORKDIR ${HOME}/workspace
+CMD ["bash"]
