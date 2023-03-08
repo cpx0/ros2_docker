@@ -6,11 +6,11 @@
 
 <summary>Ubuntu22 - Docker - DeepLearning</summary>
 
-## 1. Ubuntu 22.04 LTS (Jammy Jellyfish) インストール
+### 1. Ubuntu 22.04 LTS (Jammy Jellyfish) インストール
 
 Ubuntuを入れるとしても、Windowsも残しておく必要がある場合が多いと思いますので、ここではWindowsとUbuntuのデュアルブート手順を示します。ただし、GPGPUを安心/安全に実行するためにも、UEFIを利用したパーティション分割によるDual Bootではなく、ブートデバイスを2つのディスクに物理的に分けた状態でのDual Bootとなります。
 
-### 1.1. Ubuntu 22.04 LTS起動用LiveUSB作成
+#### 1.1. Ubuntu 22.04 LTS起動用LiveUSB作成
 
 最低4GB以上のUSBフラッシュドライブを用意してください。また、LiveUSBにするにはドライブ全体をフォーマットしなければいけないので、フォーマット以前のドライブ内データはすべて消去されることにご注意ください。
 以下のリンクから[ubuntu-22.04.1-desktop-amd64.iso](https://ubuntu.com/download/desktop/thank-you?version=22.04.1&architecture=amd64)をダウンロードしてください。
@@ -20,13 +20,13 @@ LiveUSBを作成するツールとしては、Windowsだとダウンロードの
 
 <img src="https://rufus.ie/pics/screenshot1_ja.png" width=50% height=50% alt="Rufus起動イメージ">
 
-### 1.2. デスクトップPCの準備
+#### 1.2. デスクトップPCの準備
 
 今回は別のSSDを用意してデュアルブートを行うため、パーティションは分割しません。
 UEFI(BIOS)の設定を行えばそのままWindowsのブートドライブが繋がった状態でUbuntuを新たに別のドライブに入れることもできますが、パーティション分割操作をミスするとWindowsのドライブに書き込んでしまう可能性があるので、Ubuntuを入れるドライブ以外はすべて物理的に外して作業することをお勧めします。
 UEFIの設定を行い、USBからブートできるようになったら再起動してUbuntuのインストールに入ります。
 
-### 1.3. Ubuntu 22.04 LTSのインストール
+#### 1.3. Ubuntu 22.04 LTSのインストール
 
 Ubuntuを入れるドライブ以外はすべて物理的に外した状態で[ubuntu - Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop)の手順に従ってインストールしていきます。
 
@@ -37,7 +37,7 @@ Ubuntuを入れるドライブ以外はすべて物理的に外した状態で[u
 sudo apt update
 ```
 
-### 1.4. GRUBの設定
+#### 1.4. GRUBの設定
 
 この時点でWindowsのブートドライブをつなぎ直しても大丈夫です。どちらのOSを起動するかはブートローダーによります。
 起動するOSを変更するにはUEFIから起動するドライブを変更することもできますが、UbuntuではGRUBを用いて起動するOSを変更できます。
@@ -97,7 +97,7 @@ grep windows /boot/grub/grub.cfg
 menuentry 'Windows Boot Manager (on /dev/nvme*****)' --class windows --class os $menuentry_id_option 'osprober-efi-EA6B-5F8E' {
 ```
 
-## 2. NVIDIA driverインストール
+### 2. NVIDIA driverインストール
 
 NVIDIA driverのインストールでは大まかに以下の2つの方法に分かれると思います。
 
@@ -106,12 +106,12 @@ NVIDIA driverのインストールでは大まかに以下の2つの方法に分
 
 Secure Bootを無効化している前提の記事をよく見かけるので、ここではSecure Bootを有効化したままMOKを登録してインストールする手順を示します。
 
-### 2.1. UbuntuデフォルトグラフィックドライバーのNouveauを無効化（GUI or CLI）
+#### 2.1. UbuntuデフォルトグラフィックドライバーのNouveauを無効化（GUI or CLI）
 
 UbuntuではデフォルトでNouveau driverがロードされているので、NVIDIA driverインストール前に無効化しておく必要があります。
 無効化の方法が2パターンあるのでお好きな方で無効化してください。
 
-#### 2.1.a. GUI(Graphical User Interface)でのNouveau無効化
+##### 2.1.a. GUI(Graphical User Interface)でのNouveau無効化
 
 「設定」＞「このシステムについて」＞「グラフィック」でドライバーを確認してください。
 上記画像ではすでにNVIDIA driverをインストール済みですが、Ubuntuインストール後のデフォルトは"NV132"のようなNouveau driverが有効化されていると思います。
@@ -128,7 +128,7 @@ UbuntuではデフォルトでNouveau driverがロードされているので、
 reboot
 ```
 
-#### 2.1.b. CLI(Command-Line Interface)でのNouveau無効化
+##### 2.1.b. CLI(Command-Line Interface)でのNouveau無効化
 
 sudoユーザーで各コマンドを実施してください。
 （もちろんrootユーザーでも大丈夫です。その場合は`sudo`の枕詞は不要です。）
@@ -165,7 +165,7 @@ options nouveau modeset=0
 
 ここでのviの使い方としては、事前に上追記内容を事前にコピーしておき、以下a,bどちらかの手順でキー操作を実施ください。
 
-##### 2.1.b.a. コマンドモードのみ
+###### 2.1.b.a. コマンドモードのみ
 
 1. `Shift`+`Ctrl`+`V`でペースト
 1. `:`でコマンドモードの入力待ち状態
@@ -194,7 +194,7 @@ initramfsのupdate反映のために再起動します。
 reboot
 ```
 
-### 2.2. NVIDIA driverインストール
+#### 2.2. NVIDIA driverインストール
 
 搭載グラフィックカードに対応するドライバーを確認します。
 
@@ -301,7 +301,7 @@ Sat Feb 18 01:05:08 2023
 +-----------------------------------------------------------------------------+
 ```
 
-## 3. CUDA Toolkitインストール
+### 3. CUDA Toolkitインストール
 
 CUDA Toolkitをインストールする場合、おすすめはrunfileでのインストールとなります。
 必要なコマンドが2つのみで済み、一番簡単だからです。
@@ -406,7 +406,7 @@ Cuda compilation tools, release 11.7, V11.7.99
 Build cuda_11.7.r11.7/compiler.31442593_0
 ```
 
-## 4. cuDNNインストール
+### 4. cuDNNインストール
 
 [nVIDIA DEVELOPER - cuDNN Archive](https://developer.nvidia.com/rdp/cudnn-archive)で目的のバージョンを選択してダウンロードしてください。
 
@@ -441,7 +441,7 @@ cat /usr/local/cuda/include/cudnn_version.h | grep CUDNN_MAJOR -A 2
 
 ```
 
-## 5. Docker Engineインストール
+### 5. Docker Engineインストール
 
 [docker docs - Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)に従ってDocker Engineをインストールしていきます。
 
@@ -475,7 +475,7 @@ newgrp docker
 docker version
 ```
 
-## 6. NVIDIA Container Toolkitインストール
+### 6. NVIDIA Container Toolkitインストール
 
 [NVIDIA Cloud Native Technologies - NVIDIA CONTAINER TOOLKIT: Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)に従って、Docker内でのGPU動作に必要なNVIDIA Container Tooolkitをインストールします。
 
@@ -642,7 +642,24 @@ input for selecting ROS Distro (default: humble):
 |humble|'&crarr;', 'humble' (anything except 'galactic')|
 |galactic|'galactic'|
 
-ROS 2 の colcon build
+### ROS 2 パッケージ郡のビルドおよびソース
+
+`host`:`container`=`$(pwd)`:`home/${USER}/workspace`とボリュームしており、`$(pwd)`=`ros2_docker`ディレクトリ（repo直下）でコンテナを立ち上げたと思います。
+
+ros2_dockerディレクトリは次のようなツリー構造としています。
+```
+ros2_docker
+|-- docker
+|   |-- etc...
+|-- src
+|   |-- pkgs...
+|-- etc...
+```
+
+上記の`ros2_docker/src`ディレクトリ内に利用したいROS2パッケージを配置ください。
+
+以下コマンドで`ros2_docker/src`ディレクトリ内のROS2パッケージのビルドとソースを実行すれば、配置したROS2パッケージを利用可能となります。
+
 ```terminal:terminal
 colcon build --symlink-install
 source ./install/setup.bash
