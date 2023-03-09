@@ -233,11 +233,12 @@ sudo apt install -y nvidia-driver-525
 
 MOKリストに署名鍵を登録する際に必要となるパスワードを設定して、`<了解>`を`Enter`でクリックします。
 
-:::note warn
-"Perform MOK management"内ではシステムキーボードが英字キー配列が適用となっています。日本語キーボードで作業しかつ記号を用いたパスワードを設定する場合は、ご注意ください。
-
-例．日本語キーボード上での`"`(`Shift`+`2`)＝英字キー配列での`@`(`Shift`+`2`)
-:::
+> **Warning**
+>
+> "Perform MOK management"内ではシステムキーボードが英字キー配列が適用となっています。日本語キーボードで作業しかつ記号を用いたパスワードを設定する場合は、ご注意ください。
+>
+> 例．日本語キーボード上での`"`(`Shift`+`2`)＝英字キー配列での`@`(`Shift`+`2`)
+>
 
 <img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/765592/b54b8704-91cc-bbb6-b0f4-f5bd10dcd47d.jpeg" alt="20230210_enter_pw_secure_boot.jpg">
 
@@ -482,9 +483,10 @@ docker version
 一昔前（1年ほど前？）までは`nvidia-docker2`がDocker内でのGPU動作に必要だったのですが、現在の情報によると、`nvidia-docker2`および`nvidia-container-runtime`は`nvidia-container-toolkit`に統合されたことで非推奨となっているそうです。
 情報のソースは[NVIDIA Cloud Native Technologies - NVIDIA CONTAINER TOOLKIT: Architecture Overview](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/arch-overview.html)になります。該当箇所を以下に抜粋しておきます。
 
-:::note warn
-In the past the `nvidia-docker2` and `nvidia-container-runtime` packages were also discussed as part of the NVIDIA container stack. These packages should be considered deprecated as their functionality has been merged with the `nvidia-container-toolkit` package. The packages may still be available to introduce dependencies on `nvidia-container-toolkit` and ensure that older workflows continue to function. For more information on these packages see the documentation archive for version older than `v1.12.0`.
-:::
+> **Note**
+> 
+> In the past the `nvidia-docker2` and `nvidia-container-runtime` packages were also discussed as part of the NVIDIA container stack. These packages should be considered deprecated as their functionality has been merged with the `nvidia-container-toolkit` package. The packages may still be available to introduce dependencies on `nvidia-container-toolkit` and ensure that older workflows continue to function. For more information on these packages see the documentation archive for version older than `v1.12.0`.
+> 
 
 [Setting up NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit)からNVIDIA Container Tooolkitインストール準備が始まります。
 
@@ -511,6 +513,15 @@ sudo apt install -y nvidia-container-toolkit
 sudo nvidia-ctk runtime configure --runtime=docker
 ```
 
+```terminal:output
+INFO[0000] Loading docker config from /etc/docker/daemon.json 
+INFO[0000] Config file does not exist, creating new one 
+INFO[0000] Flushing docker config to /etc/docker/daemon.json 
+INFO[0000] Successfully flushed config                  
+INFO[0000] Wrote updated config to /etc/docker/daemon.json 
+INFO[0000] It is recommended that the docker daemon be restarted. 
+```
+
 しかし、私の環境では「`/etc/docker/daemon.json`なんていうディレクトリやファイルは存在しないよ」と怒られてしまったので、以下コマンドで当該ディレクトリおよびファイルを新規作成しました。
 
 ```terminal:terminal
@@ -535,15 +546,6 @@ sudo vi /etc/docker/daemon.json
 
 ```terminal:terminal
 sudo nvidia-ctk runtime configure --runtime=docker
-```
-
-```terminal:output
-INFO[0000] Loading docker config from /etc/docker/daemon.json 
-INFO[0000] Config file does not exist, creating new one 
-INFO[0000] Flushing docker config to /etc/docker/daemon.json 
-INFO[0000] Successfully flushed config                  
-INFO[0000] Wrote updated config to /etc/docker/daemon.json 
-INFO[0000] It is recommended that the docker daemon be restarted. 
 ```
 
 新しいランタイム設定を適用するためにDockerデーモンを再始動します。
