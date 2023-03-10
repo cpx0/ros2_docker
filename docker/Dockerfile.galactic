@@ -157,7 +157,7 @@ COPY ./docker/packages/ros_entrypoint.sh /opt/app/ros_entrypoint.sh
 # Configure container startup
 RUN chown -R ${USERNAME}:${GROUPNAME} /usr/local/bin && \
     chown -R ${USERNAME}:${GROUPNAME} ${HOME} && \
-    chmod -R 777 ${HOME}
+    chmod -R 755 ${HOME}
 EXPOSE 5005 10000
 USER ${USERNAME}
 ENTRYPOINT ["/opt/app/ros_entrypoint.sh"]
