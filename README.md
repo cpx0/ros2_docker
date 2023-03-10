@@ -615,7 +615,7 @@ Build cuda_11.7.r11.7/compiler.31442593_0
 
 ### リポジトリのクローン
 ```terminal:terminal
-git clone https://github.com/cpx0/ros2_ve.git
+git clone https://github.com/cpx0/ros2_docker.git
 ```
 
 ### Dockerイメージの構築
